@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import path from 'path';
+import { existsSync } from 'fs';
 import { env } from './config/env.js';
 import { configurePassport } from './config/passport.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -26,8 +27,8 @@ app.use(passport.initialize());
 app.use('/api', routes);
 
 // Serve client in production
-if (env.nodeEnv === 'production') {
-  const clientDist = path.resolve(__dirname, '../../client/dist');
+const clientDist = path.resolve(__dirname, '../../client/dist');
+if (existsSync(clientDist)) {
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));

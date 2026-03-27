@@ -5,6 +5,7 @@ export interface User {
   avatar_url: string | null;
   provider: 'github' | 'google';
   provider_id: string;
+  language: 'en' | 'zh-TW';
   created_at: Date;
   updated_at: Date;
 }

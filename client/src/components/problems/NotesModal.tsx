@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, StickyNote } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 import type { Problem, ProblemStatus } from '../../types';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function NotesModal({ problem, status, onSave, onClose }: Props) {
+  const { t, language } = useLanguage();
   const [notes, setNotes] = useState(status.notes);
   const [saving, setSaving] = useState(false);
 
@@ -39,7 +41,7 @@ export function NotesModal({ problem, status, onSave, onClose }: Props) {
           <div className="flex items-center gap-2">
             <StickyNote size={16} className="text-amber-500" />
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
-              Notes — #{problem.leetcode_id}
+              {t.notes.title} — #{problem.leetcode_id}
             </h3>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer text-slate-500">
@@ -48,12 +50,12 @@ export function NotesModal({ problem, status, onSave, onClose }: Props) {
         </div>
         <div className="p-5">
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 truncate">
-            {problem.title}
+            {language === 'zh-TW' && problem.title_zh ? problem.title_zh : problem.title}
           </p>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add your notes, approach, or observations..."
+            placeholder={t.notes.placeholder}
             rows={6}
             className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono"
             autoFocus
@@ -64,14 +66,14 @@ export function NotesModal({ problem, status, onSave, onClose }: Props) {
             onClick={onClose}
             className="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
           >
-            Cancel
+            {t.notes.cancel}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors cursor-pointer"
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? '…' : t.notes.save}
           </button>
         </div>
       </div>

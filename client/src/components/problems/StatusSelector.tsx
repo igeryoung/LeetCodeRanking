@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Check, Minus, Bookmark, X, ChevronDown } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
+import { useLanguage } from '../../context/LanguageContext';
 import type { ProblemStatus } from '../../types';
 
 const OPTIONS = [
-  { value: 'solved',    label: 'Solved',    Icon: Check,    color: 'text-green-600 dark:text-green-400' },
-  { value: 'attempted', label: 'Attempted', Icon: Minus,    color: 'text-amber-600 dark:text-amber-400' },
-  { value: 'todo',      label: 'Todo',      Icon: Bookmark, color: 'text-blue-600 dark:text-blue-400'   },
-] as const;
+  { value: 'solved'    as const, Icon: Check,    color: 'text-green-600 dark:text-green-400' },
+  { value: 'attempted' as const, Icon: Minus,    color: 'text-amber-600 dark:text-amber-400' },
+  { value: 'todo'      as const, Icon: Bookmark, color: 'text-blue-600 dark:text-blue-400'   },
+];
 
 interface Props {
   current?: ProblemStatus;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function StatusSelector({ current, onSelect, onRemove }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -67,29 +69,26 @@ export function StatusSelector({ current, onSelect, onRemove }: Props) {
 
       {open && (
         <div className="absolute left-0 top-full mt-1 w-36 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl py-1 z-50">
-          {OPTIONS.map(({ value, label, Icon, color }) => (
+          {OPTIONS.map(({ value, Icon, color }) => (
             <button
               key={value}
               onClick={() => handle(value)}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${color} ${current?.status === value ? 'font-semibold' : ''}`}
             >
               <Icon size={14} />
-              {label}
+              {t.status[value]}
               {current?.status === value && <Check size={12} className="ml-auto" />}
             </button>
           ))}
-          {current && (
-            <>
-              <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
-              <button
-                onClick={handleRemove}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer transition-colors"
-              >
-                <X size={14} />
-                Remove
-              </button>
-            </>
-          )}
+          <div className="border-t border-slate-100 dark:border-slate-700 my-1" />
+          <button
+            onClick={handleRemove}
+            disabled={!current}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-default"
+          >
+            <X size={14} />
+            {t.status.remove}
+          </button>
         </div>
       )}
     </div>

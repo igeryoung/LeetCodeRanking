@@ -10,6 +10,7 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, ExternalLink, StickyNote, Chevr
 import { useProblems } from '../../hooks/useProblems';
 import { useStatus } from '../../hooks/useStatus';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { FilterBar, type Filters } from './FilterBar';
 import { SearchInput } from './SearchInput';
 import { StatusSelector } from './StatusSelector';
@@ -17,12 +18,13 @@ import { NotesModal } from './NotesModal';
 import { ratingColor, cn } from '../../lib/utils';
 import type { Problem } from '../../types';
 
-const PAGE_SIZES = [25, 50, 100];
+const PAGE_SIZES = [15, 25, 50, 100];
 
 export function ProblemsTable() {
   const { isAuthenticated } = useAuth();
+  const { language, t } = useLanguage();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(15);
   const [search, setSearch] = useState('');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'rating', desc: true }]);
   const [filters, setFilters] = useState<Filters>({ problemIndex: [], statusFilter: [] });
@@ -59,7 +61,7 @@ export function ProblemsTable() {
       {
         id: 'rating',
         accessorKey: 'rating',
-        header: 'Rating',
+        header: t.table.rating,
         size: 90,
         cell: ({ row }) => (
           <span className={cn('font-mono font-semibold text-sm', ratingColor(row.original.rating))}>
@@ -70,7 +72,7 @@ export function ProblemsTable() {
       {
         id: 'id',
         accessorKey: 'leetcode_id',
-        header: 'ID',
+        header: t.table.id,
         size: 70,
         cell: ({ row }) => (
           <span className="font-mono text-sm text-slate-500 dark:text-slate-400">
@@ -81,46 +83,51 @@ export function ProblemsTable() {
       {
         id: 'title',
         accessorKey: 'title',
-        header: 'Problem',
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <a
-              href={`https://leetcode.com/problems/${row.original.title_slug}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              <span className="truncate">{row.original.title}</span>
-              <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" />
-            </a>
-            {row.original.title_zh && (
-              <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                {row.original.title_zh}
-              </p>
-            )}
-          </div>
-        ),
+        header: t.table.problem,
+        cell: ({ row }) => {
+          const title = language === 'zh-TW' && row.original.title_zh
+            ? row.original.title_zh
+            : row.original.title;
+          return (
+            <div className="min-w-0">
+              <a
+                href={`https://leetcode.com/problems/${row.original.title_slug}/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <span className="truncate">{title}</span>
+                <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" />
+              </a>
+            </div>
+          );
+        },
       },
       {
         id: 'contest',
         accessorKey: 'contest_id_en',
-        header: 'Contest',
+        header: t.table.contest,
         size: 200,
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="text-xs text-slate-600 dark:text-slate-300 truncate">{row.original.contest_id_en}</p>
-            <span className="inline-block text-xs font-mono px-1.5 py-0.5 mt-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
-              {row.original.problem_index}
-            </span>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const contestName = language === 'zh-TW' && row.original.contest_id_zh
+            ? row.original.contest_id_zh
+            : row.original.contest_id_en;
+          return (
+            <div className="min-w-0">
+              <p className="text-xs text-slate-600 dark:text-slate-300 truncate">{contestName}</p>
+              <span className="inline-block text-xs font-mono px-1.5 py-0.5 mt-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                {row.original.problem_index}
+              </span>
+            </div>
+          );
+        },
       },
     ];
 
     if (isAuthenticated) {
       cols.push({
         id: 'status',
-        header: 'Status',
+        header: t.table.status,
         size: 120,
         enableSorting: false,
         cell: ({ row }) => {
@@ -153,7 +160,7 @@ export function ProblemsTable() {
     }
 
     return cols;
-  }, [isAuthenticated, statusMap, updateStatus, deleteStatus]);
+  }, [isAuthenticated, statusMap, updateStatus, deleteStatus, language, t]);
 
   const table = useReactTable({
     data: problems,
@@ -187,13 +194,13 @@ export function ProblemsTable() {
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <SearchInput value={search} onChange={handleSearch} />
         <div className="ml-auto flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <span>{total.toLocaleString()} problems</span>
+          <span>{total.toLocaleString()} {t.table.problems}</span>
           <select
             value={pageSize}
             onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
             className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs cursor-pointer text-slate-700 dark:text-slate-200 focus:outline-none"
           >
-            {PAGE_SIZES.map((s) => <option key={s} value={s}>{s} / page</option>)}
+            {PAGE_SIZES.map((s) => <option key={s} value={s}>{s} {t.table.perPage}</option>)}
           </select>
         </div>
       </div>
@@ -202,7 +209,7 @@ export function ProblemsTable() {
       <FilterBar filters={filters} onChange={handleFiltersChange} />
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto border-l border-r border-slate-200 dark:border-slate-700">
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
             {table.getHeaderGroups().map((hg) => (
@@ -248,7 +255,7 @@ export function ProblemsTable() {
             ) : table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-16 text-center text-slate-400 dark:text-slate-500">
-                  No problems found
+                  {t.table.noResults}
                 </td>
               </tr>
             ) : (
@@ -279,7 +286,7 @@ export function ProblemsTable() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400">
         <span>
-          Page {page} of {totalPages}
+          {t.table.page} {page} {t.table.of} {totalPages}
         </span>
         <div className="flex items-center gap-1">
           <button

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { fetchStats } from '../api/status';
 import { fetchProblems } from '../api/problems';
 import { StatsOverview } from '../components/dashboard/StatsOverview';
@@ -9,6 +10,7 @@ import type { Stats } from '../types';
 
 export function DashboardPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats | null>(null);
   const [total, setTotal] = useState(0);
@@ -46,10 +48,10 @@ export function DashboardPage() {
     <div className="max-w-screen-2xl mx-auto w-full px-4 py-6 space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          {user?.display_name}'s Dashboard
+          {user?.display_name}'s {t.dashboard.title}
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Your LeetCode problem solving progress
+          {t.dashboard.subtitle}
         </p>
       </div>
       <StatsOverview stats={stats} total={total} />

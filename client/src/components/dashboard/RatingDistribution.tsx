@@ -2,6 +2,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer
 } from 'recharts';
+import { useLanguage } from '../../context/LanguageContext';
 import type { Stats } from '../../types';
 
 interface Props { stats: Stats; }
@@ -9,6 +10,7 @@ interface Props { stats: Stats; }
 const BANDS = ['0-1200','1200-1400','1400-1600','1600-1800','1800-2000','2000-2200','2200-2400','2400+'];
 
 export function RatingDistribution({ stats }: Props) {
+  const { t } = useLanguage();
   const dataMap: Record<string, Record<string, number>> = {};
   for (const b of BANDS) dataMap[b] = { solved: 0, attempted: 0, todo: 0 };
 
@@ -22,7 +24,7 @@ export function RatingDistribution({ stats }: Props) {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">Progress by Rating Band</h3>
+      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-4">{t.dashboard.ratingDist}</h3>
       <ResponsiveContainer width="100%" height={240}>
         <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
@@ -33,9 +35,9 @@ export function RatingDistribution({ stats }: Props) {
             labelStyle={{ color: '#f1f5f9', fontWeight: 600 }}
           />
           <Legend iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="solved"    name="Solved"    stackId="a" fill="#22c55e" radius={[0,0,0,0]} />
-          <Bar dataKey="attempted" name="Attempted" stackId="a" fill="#f59e0b" />
-          <Bar dataKey="todo"      name="Todo"      stackId="a" fill="#3b82f6" radius={[4,4,0,0]} />
+          <Bar dataKey="solved"    name={t.status.solved}    stackId="a" fill="#22c55e" radius={[0,0,0,0]} />
+          <Bar dataKey="attempted" name={t.status.attempted} stackId="a" fill="#f59e0b" />
+          <Bar dataKey="todo"      name={t.status.todo}      stackId="a" fill="#3b82f6" radius={[4,4,0,0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

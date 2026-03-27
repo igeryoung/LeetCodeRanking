@@ -18,7 +18,7 @@ export function StatusBadge({ status, compact = false }: Props) {
   return (
     <span className={cn('inline-flex items-center gap-1 rounded-full font-medium', config.class, compact ? 'px-1.5 py-0.5 text-xs' : 'px-2.5 py-1 text-xs')}>
       <Icon size={11} strokeWidth={2.5} />
-      {!compact && config.label}
+      {config.label}
     </span>
   );
 }

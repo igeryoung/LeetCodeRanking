@@ -14,6 +14,14 @@ export async function findById(id: string): Promise<User | null> {
   return rows[0] || null;
 }
 
+export async function updateLanguage(userId: string, language: 'en' | 'zh-TW'): Promise<User | null> {
+  const { rows } = await query(
+    `UPDATE users SET language = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+    [language, userId]
+  );
+  return rows[0] || null;
+}
+
 export async function upsert(data: {
   email: string | null;
   display_name: string;

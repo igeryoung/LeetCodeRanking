@@ -4,6 +4,7 @@ export interface User {
   display_name: string;
   avatar_url: string | null;
   provider: 'github' | 'google';
+  language: 'en' | 'zh-TW';
 }
 
 export interface Problem {
