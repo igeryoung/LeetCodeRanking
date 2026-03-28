@@ -1,9 +1,20 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
+import rateLimit from 'express-rate-limit';
 import * as authController from '../controllers/auth.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.use(authLimiter);
 
 // GitHub OAuth
 router.get('/github', passport.authenticate('github', { session: false }));
