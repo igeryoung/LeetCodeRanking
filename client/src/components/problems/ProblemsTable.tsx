@@ -21,6 +21,23 @@ import { ratingColor, cn } from '../../lib/utils';
 import type { Problem } from '../../types';
 
 const PAGE_SIZES = [15, 25, 50, 100];
+const FILTER_STORAGE_KEY = 'lc-filter-settings';
+
+function loadFilters(): Filters {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Filters;
+      return {
+        ratingMin: parsed.ratingMin,
+        ratingMax: parsed.ratingMax,
+        problemIndex: Array.isArray(parsed.problemIndex) ? parsed.problemIndex : [],
+        statusFilter: Array.isArray(parsed.statusFilter) ? parsed.statusFilter : [],
+      };
+    }
+  } catch {}
+  return { problemIndex: [], statusFilter: [] };
+}
 
 export function ProblemsTable() {
   const { isAuthenticated } = useAuth();
@@ -29,8 +46,12 @@ export function ProblemsTable() {
   const [pageSize, setPageSize] = useState(15);
   const [search, setSearch] = useState('');
   const [sorting, setSorting] = useState<SortingState>([{ id: 'rating', desc: true }]);
-  const [filters, setFilters] = useState<Filters>({ problemIndex: [], statusFilter: [] });
+  const [filters, setFilters] = useState<Filters>(loadFilters);
   const [notesTarget, setNotesTarget] = useState<Problem | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+  }, [filters]);
 
   const { statusMap, updateStatus, deleteStatus } = useStatus();
   const timer = useTimer();
