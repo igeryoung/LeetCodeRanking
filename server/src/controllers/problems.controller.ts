@@ -7,12 +7,12 @@ export async function getProblems(req: Request, res: Response, next: NextFunctio
     const q = req.query as unknown as Record<string, string | string[] | undefined>;
 
     const filters: ProblemFilters = {
-      page: parseInt(q.page as string) || 1,
-      limit: Math.min(parseInt(q.limit as string) || 50, 200),
+      page: Math.max(1, parseInt(q.page as string) || 1),
+      limit: Math.min(Math.max(1, parseInt(q.limit as string) || 50), 200),
       sort: (q.sort as string) || 'rating',
       order: (q.order as string) === 'asc' ? 'asc' : 'desc',
-      ratingMin: q.ratingMin ? parseFloat(q.ratingMin as string) : undefined,
-      ratingMax: q.ratingMax ? parseFloat(q.ratingMax as string) : undefined,
+      ratingMin: q.ratingMin ? Math.max(0, parseFloat(q.ratingMin as string) || 0) : undefined,
+      ratingMax: q.ratingMax ? Math.max(0, parseFloat(q.ratingMax as string) || 0) : undefined,
       problemIndex: q.problemIndex
         ? Array.isArray(q.problemIndex)
           ? q.problemIndex as string[]
