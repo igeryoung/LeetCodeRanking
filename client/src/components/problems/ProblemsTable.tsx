@@ -114,6 +114,11 @@ export function ProblemsTable() {
                     timer.start(row.original.leetcode_id);
                   }
                 }}
+                onAuxClick={(e) => {
+                  if (e.button === 1 && isAuthenticated) {
+                    timer.start(row.original.leetcode_id);
+                  }
+                }}
                 className="group flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <span className="truncate">{title}</span>
