@@ -30,6 +30,7 @@ export interface UserProblemStatus {
   problem_id: number;
   status: 'solved' | 'attempted' | 'todo';
   notes: string;
+  time_spent: number;
   created_at: Date;
   updated_at: Date;
 }

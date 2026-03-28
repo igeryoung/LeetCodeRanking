@@ -8,11 +8,12 @@ export async function fetchStatuses(): Promise<StatusMap> {
 export async function upsertStatus(
   leetcodeId: number,
   status: string,
-  notes: string
+  notes: string,
+  timeSpent?: number
 ): Promise<void> {
   await apiFetch(`/status/${leetcodeId}`, {
     method: 'PUT',
-    body: JSON.stringify({ status, notes }),
+    body: JSON.stringify({ status, notes, timeSpent }),
   });
 }
 
