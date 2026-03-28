@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,9 +11,11 @@ import { useProblems } from '../../hooks/useProblems';
 import { useStatus } from '../../hooks/useStatus';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTimer } from '../../context/TimerContext';
 import { FilterBar, type Filters } from './FilterBar';
 import { SearchInput } from './SearchInput';
 import { StatusSelector } from './StatusSelector';
+import { TimerDisplay } from './TimerDisplay';
 import { NotesModal } from './NotesModal';
 import { ratingColor, cn } from '../../lib/utils';
 import type { Problem } from '../../types';
@@ -31,6 +33,19 @@ export function ProblemsTable() {
   const [notesTarget, setNotesTarget] = useState<Problem | null>(null);
 
   const { statusMap, updateStatus, deleteStatus } = useStatus();
+  const timer = useTimer();
+
+  // Seed timers from server-persisted timeSpent values
+  const seededRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    for (const [idStr, s] of Object.entries(statusMap)) {
+      const id = Number(idStr);
+      if (s.timeSpent > 0 && !seededRef.current.has(id)) {
+        seededRef.current.add(id);
+        timer.seed(id, s.timeSpent);
+      }
+    }
+  }, [statusMap, timer]);
 
   const sortField = sorting[0];
   const query = useMemo(() => ({
@@ -94,6 +109,11 @@ export function ProblemsTable() {
                 href={`https://leetcode.com/problems/${row.original.title_slug}/`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    timer.start(row.original.leetcode_id);
+                  }
+                }}
                 className="group flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <span className="truncate">{title}</span>
@@ -136,8 +156,12 @@ export function ProblemsTable() {
             <div className="flex items-center gap-2">
               <StatusSelector
                 current={s}
-                onSelect={(status, notes) => updateStatus(row.original.leetcode_id, status, notes)}
-                onRemove={() => deleteStatus(row.original.leetcode_id)}
+                leetcodeId={row.original.leetcode_id}
+                onSelect={(status, notes, timeSpent) => updateStatus(row.original.leetcode_id, status, notes, timeSpent)}
+                onRemove={() => {
+                  timer.reset(row.original.leetcode_id);
+                  return deleteStatus(row.original.leetcode_id);
+                }}
               />
               {s && (
                 <button
@@ -154,6 +178,21 @@ export function ProblemsTable() {
                 </button>
               )}
             </div>
+          );
+        },
+      });
+      cols.push({
+        id: 'timer',
+        header: t.table.time,
+        size: 110,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const s = statusMap[row.original.leetcode_id];
+          return (
+            <TimerDisplay
+              leetcodeId={row.original.leetcode_id}
+              isSolved={s?.status === 'solved'}
+            />
           );
         },
       });
@@ -261,13 +300,15 @@ export function ProblemsTable() {
             ) : (
               table.getRowModel().rows.map((row) => {
                 const status = statusMap[row.original.leetcode_id]?.status;
+                const isActive = timer.activeId === row.original.leetcode_id;
                 return (
                   <tr
                     key={row.id}
                     className={cn(
                       'border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
                       status === 'solved' && 'bg-green-50/30 dark:bg-green-950/10',
-                      status === 'attempted' && 'bg-amber-50/30 dark:bg-amber-950/10'
+                      status === 'attempted' && 'bg-amber-50/30 dark:bg-amber-950/10',
+                      isActive && 'border-l-2 border-l-blue-500 bg-blue-50/20 dark:bg-blue-950/10'
                     )}
                   >
                     {row.getVisibleCells().map((cell) => (

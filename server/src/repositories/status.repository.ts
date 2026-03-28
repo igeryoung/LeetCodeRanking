@@ -19,17 +19,19 @@ export async function upsert(data: {
   problemId: number;
   status: string;
   notes: string;
+  timeSpent?: number;
 }): Promise<UserProblemStatus> {
   const { rows } = await query(
-    `INSERT INTO user_problem_status (user_id, problem_id, status, notes)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO user_problem_status (user_id, problem_id, status, notes, time_spent)
+     VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (user_id, problem_id)
      DO UPDATE SET
        status = EXCLUDED.status,
        notes = EXCLUDED.notes,
+       time_spent = EXCLUDED.time_spent,
        updated_at = NOW()
      RETURNING *`,
-    [data.userId, data.problemId, data.status, data.notes]
+    [data.userId, data.problemId, data.status, data.notes, data.timeSpent ?? 0]
   );
   return rows[0];
 }
@@ -73,6 +75,13 @@ export async function getStats(userId: string) {
     [userId]
   );
 
+  const { rows: timeRows } = await query(
+    `SELECT COALESCE(SUM(time_spent), 0) as total_time
+     FROM user_problem_status
+     WHERE user_id = $1`,
+    [userId]
+  );
+
   return {
     summary: Object.fromEntries(rows.map((r) => [r.status, parseInt(r.count, 10)])),
     byRating: ratingBands.map((r) => ({
@@ -80,5 +89,6 @@ export async function getStats(userId: string) {
       status: r.status,
       count: parseInt(r.count, 10),
     })),
+    totalTimeSpent: parseInt(timeRows[0]?.total_time ?? '0', 10),
   };
 }

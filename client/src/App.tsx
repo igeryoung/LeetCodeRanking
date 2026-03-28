@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { TimerProvider } from './context/TimerContext';
 import { Header } from './components/layout/Header';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -12,6 +13,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <LanguageProvider>
+          <TimerProvider>
           <BrowserRouter>
             <div className="flex flex-col min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
               <Header />
@@ -26,6 +28,7 @@ function App() {
               </main>
             </div>
           </BrowserRouter>
+          </TimerProvider>
         </LanguageProvider>
       </AuthProvider>
     </ThemeProvider>

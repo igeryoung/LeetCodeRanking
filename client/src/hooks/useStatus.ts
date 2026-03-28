@@ -26,12 +26,17 @@ export function useStatus() {
   const updateStatus = useCallback(async (
     leetcodeId: number,
     status: string,
-    notes: string
+    notes: string,
+    timeSpent?: number
   ) => {
-    await apiUpsert(leetcodeId, status, notes);
+    await apiUpsert(leetcodeId, status, notes, timeSpent);
     setStatusMap((prev) => ({
       ...prev,
-      [leetcodeId]: { status: status as 'solved' | 'attempted' | 'todo', notes },
+      [leetcodeId]: {
+        status: status as 'solved' | 'attempted' | 'todo',
+        notes,
+        timeSpent: timeSpent ?? prev[leetcodeId]?.timeSpent ?? 0,
+      },
     }));
   }, []);
 
