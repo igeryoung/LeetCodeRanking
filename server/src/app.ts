@@ -13,7 +13,10 @@ import routes from './routes/index.js';
 const app = express();
 
 // Security headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,   // CSP managed by the SPA framework
+  crossOriginEmbedderPolicy: false, // Allow OAuth redirects
+}));
 
 // Middleware
 app.use(cors({
