@@ -22,6 +22,9 @@ import type { Problem } from '../../types';
 
 const PAGE_SIZES = [15, 25, 50, 100];
 const FILTER_STORAGE_KEY = 'lc-filter-settings';
+const SORTING_STORAGE_KEY = 'lc-sorting-settings';
+
+const DEFAULT_SORTING: SortingState = [{ id: 'rating', desc: true }];
 
 function loadFilters(): Filters {
   try {
@@ -39,19 +42,34 @@ function loadFilters(): Filters {
   return { problemIndex: [], statusFilter: [] };
 }
 
+function loadSorting(): SortingState {
+  try {
+    const stored = localStorage.getItem(SORTING_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as SortingState;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return DEFAULT_SORTING;
+}
+
 export function ProblemsTable() {
   const { isAuthenticated } = useAuth();
   const { language, t } = useLanguage();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
   const [search, setSearch] = useState('');
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'rating', desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>(loadSorting);
   const [filters, setFilters] = useState<Filters>(loadFilters);
   const [notesTarget, setNotesTarget] = useState<Problem | null>(null);
 
   useEffect(() => {
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
   }, [filters]);
+
+  useEffect(() => {
+    localStorage.setItem(SORTING_STORAGE_KEY, JSON.stringify(sorting));
+  }, [sorting]);
 
   const { statusMap, updateStatus, deleteStatus } = useStatus();
   const timer = useTimer();
