@@ -8,10 +8,10 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 5000,
 });
 
-async function connectWithRetry(maxRetries = 8, baseDelay = 3000) {
+async function connectWithRetry(maxRetries = 3, baseDelay = 2000) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const client = await pool.connect();
@@ -21,7 +21,7 @@ async function connectWithRetry(maxRetries = 8, baseDelay = 3000) {
       const msg = err instanceof Error ? err.message : String(err);
       console.log(`  Database connection attempt ${attempt}/${maxRetries} failed: ${msg}`);
       if (attempt === maxRetries) throw err;
-      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 30000);
+      const delay = baseDelay * attempt;
       console.log(`  Retrying in ${delay / 1000}s...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
