@@ -10,10 +10,26 @@ import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 
 const app = express();
+const clientDist = path.resolve(__dirname, '../../client/dist');
+const hasClientDist = existsSync(clientDist);
+
+if (env.nodeEnv === 'production') {
+  console.log(`[startup] clientDist=${clientDist} exists=${hasClientDist}`);
+}
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
+
+if (env.nodeEnv === 'production') {
+  app.use((req, res, next) => {
+    const startedAt = Date.now();
+    res.on('finish', () => {
+      console.log(`[http] ${req.method} ${req.originalUrl} -> ${res.statusCode} ${Date.now() - startedAt}ms`);
+    });
+    next();
+  });
+}
 
 // Middleware
 app.use(cors({
@@ -31,8 +47,7 @@ app.use(passport.initialize());
 app.use('/api', routes);
 
 // Serve client in production
-const clientDist = path.resolve(__dirname, '../../client/dist');
-if (existsSync(clientDist)) {
+if (hasClientDist) {
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
