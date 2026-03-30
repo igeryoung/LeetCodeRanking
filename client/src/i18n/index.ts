@@ -2,7 +2,7 @@ export type Language = 'en' | 'zh-TW';
 
 export interface Translations {
   nav: { problems: string; dashboard: string; appName: string };
-  table: { rating: string; id: string; problem: string; contest: string; status: string; problems: string; perPage: string; page: string; of: string; noResults: string };
+  table: { rating: string; id: string; problem: string; contest: string; status: string; problems: string; perPage: string; page: string; of: string; noResults: string; unrated: string };
   filter: { filters: string; rating: string; min: string; max: string; reset: string };
   status: { solved: string; attempted: string; todo: string; remove: string };
   dashboard: { title: string; subtitle: string; solved: string; attempted: string; todo: string; touched: string; ofTotal: (pct: number, total: number) => string; ratingDist: string };
@@ -28,6 +28,7 @@ export const translations: Record<Language, Translations> = {
       page: 'Page',
       of: 'of',
       noResults: 'No problems found',
+      unrated: 'Unrated',
     },
     filter: {
       filters: 'Filters',
@@ -81,6 +82,7 @@ export const translations: Record<Language, Translations> = {
       page: '第',
       of: '共',
       noResults: '找不到題目',
+      unrated: '未評分',
     },
     filter: {
       filters: '篩選',

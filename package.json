@@ -7,7 +7,7 @@
     "server"
   ],
   "engines": {
-    "node": ">=20.19.0"
+    "node": "22.13.1"
   },
   "scripts": {
     "dev:server": "npm run dev --workspace=server",
@@ -19,5 +19,8 @@
   },
   "devDependencies": {
     "opencc-js": "^1.0.5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0"
   }
 }

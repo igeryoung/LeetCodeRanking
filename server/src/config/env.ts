@@ -1,12 +1,13 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { resolveDatabaseUrl } from './databaseRuntime.js';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 export const env = {
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  databaseUrl: process.env.DATABASE_URL || '',
+  databaseUrl: resolveDatabaseUrl(),
   jwtSecret: process.env.JWT_SECRET || 'dev-jwt-secret',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'dev-jwt-refresh-secret',
   github: {

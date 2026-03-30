@@ -65,7 +65,7 @@ export function ProblemsTable() {
         size: 90,
         cell: ({ row }) => (
           <span className={cn('font-mono font-semibold text-sm', ratingColor(row.original.rating))}>
-            {Number(row.original.rating).toFixed(0)}
+            {Number(row.original.rating) === 0 ? t.table.unrated : Number(row.original.rating).toFixed(0)}
           </span>
         ),
       },

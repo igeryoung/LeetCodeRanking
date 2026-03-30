@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { getDatabasePoolConfig, requireDatabaseUrl, withRetry } from '../src/config/databaseRuntime.js';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -18,11 +19,12 @@ interface RatingEntry {
 }
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ...getDatabasePoolConfig(process.env.NODE_ENV),
+  max: 1,
 });
 
 async function importProblems() {
+  requireDatabaseUrl();
   const dataPath = path.resolve(__dirname, '../../data/leetcode-ratings.json');
   const raw = fs.readFileSync(dataPath, 'utf-8');
   const entries: RatingEntry[] = JSON.parse(raw);
@@ -85,7 +87,7 @@ async function importProblems() {
   }
 }
 
-importProblems().catch((err) => {
+withRetry('Database seed', importProblems).catch((err) => {
   console.error('Seed failed:', err);
   process.exit(1);
 });

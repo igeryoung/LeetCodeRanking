@@ -1,12 +1,9 @@
 import { Pool } from 'pg';
 import { env } from './env.js';
+import { getDatabasePoolConfig, requireDatabaseUrl } from './databaseRuntime.js';
 
 export const pool = new Pool({
-  connectionString: env.databaseUrl,
-  ssl: env.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  ...getDatabasePoolConfig(env.nodeEnv),
 });
 
 pool.on('error', (err) => {
@@ -14,5 +11,6 @@ pool.on('error', (err) => {
 });
 
 export async function query(text: string, params?: unknown[]) {
+  requireDatabaseUrl();
   return pool.query(text, params as unknown[]);
 }

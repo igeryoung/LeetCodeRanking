@@ -2,15 +2,17 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { getDatabasePoolConfig, requireDatabaseUrl, withRetry } from '../src/config/databaseRuntime.js';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ...getDatabasePoolConfig(process.env.NODE_ENV),
+  max: 1,
 });
 
 async function runMigrations() {
+  requireDatabaseUrl();
   const client = await pool.connect();
 
   try {
@@ -57,7 +59,7 @@ async function runMigrations() {
   }
 }
 
-runMigrations().catch((err) => {
+withRetry('Database migrations', runMigrations).catch((err) => {
   console.error('Migration runner failed:', err);
   process.exit(1);
 });
