@@ -10,8 +10,23 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
+async function connectWithRetry(maxRetries = 5, baseDelay = 2000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const client = await pool.connect();
+      return client;
+    } catch (err) {
+      if (attempt === maxRetries) throw err;
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      console.log(`  Database connection attempt ${attempt}/${maxRetries} failed, retrying in ${delay / 1000}s...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Unreachable');
+}
+
 async function runMigrations() {
-  const client = await pool.connect();
+  const client = await connectWithRetry();
 
   try {
     await client.query(`
