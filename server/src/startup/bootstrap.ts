@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { pool } from '../config/database.js';
 import { requireDatabaseUrl, withRetry } from '../config/databaseRuntime.js';
 import { markBootstrapFailed, markBootstrapping, markReady } from './bootstrapState.js';
@@ -17,11 +18,13 @@ interface RatingEntry {
 }
 
 function resolveMigrationsDir() {
-  return path.resolve(process.cwd(), 'server/migrations');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(__dirname, '../../migrations');
 }
 
 function resolveDataPath() {
-  return path.resolve(process.cwd(), 'data/leetcode-ratings.json');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(__dirname, '../../../data/leetcode-ratings.json');
 }
 
 export async function runMigrations() {
@@ -139,7 +142,6 @@ export async function bootstrapDatabase() {
   markBootstrapping();
 
   try {
-    await withRetry('Database migrations', runMigrations);
     await withRetry('Database seed', seedProblems);
     markReady();
     console.log('Database bootstrap complete.');
