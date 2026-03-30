@@ -34,8 +34,10 @@ app.use('/api', (req, res, next) => {
 
   if (!status.ready && req.path !== '/health') {
     res.status(503).json({
+      ready: status.ready,
+      bootstrapping: status.bootstrapping,
+      bootstrapError: status.error,
       error: 'Service is starting up. Database bootstrap still in progress.',
-      ...status,
     });
     return;
   }
