@@ -21,6 +21,14 @@ function hasUnresolvedRailwayReference(value: string) {
   return value.includes('${{');
 }
 
+function getDatabaseHostname(connectionString: string) {
+  try {
+    return new URL(connectionString).hostname;
+  } catch {
+    return '';
+  }
+}
+
 function buildDatabaseUrlFromPgEnv() {
   const host = sanitizeEnvValue(process.env.PGHOST);
   const port = sanitizeEnvValue(process.env.PGPORT) || '5432';
@@ -50,12 +58,20 @@ export function resolveDatabaseUrl() {
 }
 
 function resolveDatabaseSsl(nodeEnv: string): PoolConfig['ssl'] {
+  const databaseUrl = resolveDatabaseUrl();
+  const hostname = databaseUrl ? getDatabaseHostname(databaseUrl) : '';
+  const isRailwayPrivateHost = hostname.endsWith('.railway.internal');
+
   if (process.env.DATABASE_SSL === 'false' || process.env.PGSSLMODE === 'disable') {
     return false;
   }
 
   if (process.env.DATABASE_SSL === 'true') {
     return { rejectUnauthorized: false };
+  }
+
+  if (isRailwayPrivateHost) {
+    return false;
   }
 
   return nodeEnv === 'production' ? { rejectUnauthorized: false } : false;
@@ -67,9 +83,11 @@ export function getDatabasePoolConfig(nodeEnv = process.env.NODE_ENV || 'develop
   return {
     connectionString: connectionString || undefined,
     ssl: resolveDatabaseSsl(nodeEnv),
-    max: 20,
+    max: 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
   };
 }
 
