@@ -1,10 +1,9 @@
-[phases.setup]
-nixPkgs = ["nodejs_20"]
+[variables]
+NIXPACKS_NODE_VERSION = "20"
 
 [phases.install]
 cmds = [
-  "npm install --include=dev",
-  "npm install --no-save @rolldown/binding-linux-x64-gnu@1.0.0-rc.12"
+  "npm install --include=dev --include=optional"
 ]
 
 [phases.build]
