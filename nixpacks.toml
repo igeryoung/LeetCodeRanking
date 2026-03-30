@@ -3,7 +3,7 @@ nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = [
-  "npm ci --include=dev",
+  "npm install --include=dev",
   "npm install --no-save @rolldown/binding-linux-x64-gnu@1.0.0-rc.12"
 ]
 
