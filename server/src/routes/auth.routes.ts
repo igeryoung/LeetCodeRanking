@@ -6,6 +6,7 @@ import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
+// Rate-limit only OAuth initiation routes (not callbacks, refresh, or me)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
@@ -14,16 +15,15 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.use(authLimiter);
-
 // GitHub OAuth
-router.get('/github', passport.authenticate('github', { session: false }));
+router.get('/github', authLimiter, passport.authenticate('github', { session: false }));
 
 router.get(
   '/github/callback',
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('github', { session: false }, (err: Error | null, result: unknown) => {
       if (err || !result) {
+        console.error('GitHub OAuth failed:', err?.message || err || 'No user result returned');
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?error=auth_failed`);
       }
       req.authResult = result as { accessToken: string; refreshToken: string };
@@ -34,13 +34,14 @@ router.get(
 );
 
 // Google OAuth
-router.get('/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
+router.get('/google', authLimiter, passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
 
 router.get(
   '/google/callback',
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('google', { session: false }, (err: Error | null, result: unknown) => {
       if (err || !result) {
+        console.error('Google OAuth failed:', err?.message || err || 'No user result returned');
         return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?error=auth_failed`);
       }
       req.authResult = result as { accessToken: string; refreshToken: string };

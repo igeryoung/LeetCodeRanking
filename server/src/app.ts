@@ -12,10 +12,14 @@ import routes from './routes/index.js';
 
 const app = express();
 
+// Trust reverse proxy (Railway, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
-  contentSecurityPolicy: false,   // CSP managed by the SPA framework
-  crossOriginEmbedderPolicy: false, // Allow OAuth redirects
+  contentSecurityPolicy: false,          // CSP managed by the SPA framework
+  crossOriginEmbedderPolicy: false,      // Allow OAuth redirects
+  crossOriginOpenerPolicy: false,        // Allow cross-origin OAuth flows
 }));
 
 // Middleware
