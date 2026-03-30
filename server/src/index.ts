@@ -26,7 +26,7 @@ process.on('SIGINT', () => {
   console.warn('[process] SIGINT');
 });
 
-const server = app.listen(env.port, '0.0.0.0', () => {
+const server = app.listen(env.port, () => {
   console.log(`Server running on port ${env.port} (${env.nodeEnv})`);
   console.log('[server] address', server.address());
 });
