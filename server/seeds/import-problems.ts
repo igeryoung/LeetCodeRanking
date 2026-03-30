@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { closePool } from '../src/config/database.js';
-import { seedProblems } from '../src/startup/bootstrap.js';
+import { seedProblems } from '../src/databaseSetup.js';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 

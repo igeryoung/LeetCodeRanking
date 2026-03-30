@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { pool } from '../config/database.js';
-import { requireDatabaseUrl, withRetry } from '../config/databaseRuntime.js';
-import { markBootstrapFailed, markBootstrapping, markReady } from './bootstrapState.js';
+import { pool } from './config/database.js';
+import { requireDatabaseUrl } from './config/databaseRuntime.js';
 
 interface RatingEntry {
   Rating: number;
@@ -37,7 +36,7 @@ export async function runMigrations() {
     `);
 
     const { rows: applied } = await client.query('SELECT name FROM _migrations ORDER BY name');
-    const appliedSet = new Set(applied.map((r) => r.name));
+    const appliedSet = new Set(applied.map((row) => row.name));
 
     const migrationsDir = resolveMigrationsDir();
     const files = fs.readdirSync(migrationsDir)
@@ -132,19 +131,5 @@ export async function seedProblems() {
     console.log('Seed complete.');
   } finally {
     client.release();
-  }
-}
-
-export async function bootstrapDatabase() {
-  markBootstrapping();
-
-  try {
-    await withRetry('Database migrations', runMigrations);
-    await withRetry('Database seed', seedProblems);
-    markReady();
-    console.log('Database bootstrap complete.');
-  } catch (error) {
-    markBootstrapFailed(error);
-    throw error;
   }
 }

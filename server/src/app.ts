@@ -8,12 +8,11 @@ import { env } from './config/env.js';
 import { configurePassport } from './config/passport.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
-import { getBootstrapStatus } from './startup/bootstrapState.js';
 
 const app = express();
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, ...getBootstrapStatus() });
+  res.json({ ok: true });
 });
 
 // Middleware
@@ -29,21 +28,6 @@ configurePassport();
 app.use(passport.initialize());
 
 // API routes
-app.use('/api', (req, res, next) => {
-  const status = getBootstrapStatus();
-
-  if (!status.ready && req.path !== '/health') {
-    res.status(503).json({
-      ready: status.ready,
-      bootstrapping: status.bootstrapping,
-      bootstrapError: status.error,
-      error: 'Service is starting up. Database bootstrap still in progress.',
-    });
-    return;
-  }
-
-  next();
-});
 app.use('/api', routes);
 
 // Serve client in production
