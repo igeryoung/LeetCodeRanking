@@ -14,3 +14,7 @@ export async function query(text: string, params?: unknown[]) {
   requireDatabaseUrl();
   return pool.query(text, params as unknown[]);
 }
+
+export async function closePool() {
+  await pool.end();
+}
