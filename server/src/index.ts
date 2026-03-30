@@ -1,6 +1,7 @@
 import app from './app.js';
 import { env } from './config/env.js';
 import http from 'http';
+import { testDatabaseConnection } from './config/database.js';
 
 process.on('unhandledRejection', (reason) => {
   console.error('[process] unhandledRejection', reason);
@@ -44,6 +45,12 @@ setInterval(() => {
 }, 30000).unref();
 
 if (env.nodeEnv === 'production') {
+  setTimeout(() => {
+    void testDatabaseConnection().catch((error) => {
+      console.error('[db] startup test failed', error);
+    });
+  }, 1000).unref();
+
   setInterval(() => {
     const req = http.get(`http://127.0.0.1:${env.port}/api/health`, (res) => {
       console.log(`[self-probe] status=${res.statusCode}`);

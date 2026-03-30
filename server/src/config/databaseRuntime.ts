@@ -91,6 +91,18 @@ export function getDatabasePoolConfig(nodeEnv = process.env.NODE_ENV || 'develop
   };
 }
 
+export function getDatabaseDebugInfo(nodeEnv = process.env.NODE_ENV || 'development') {
+  const connectionString = resolveDatabaseUrl();
+  const hostname = connectionString ? getDatabaseHostname(connectionString) : '';
+
+  return {
+    hasDatabaseUrl: Boolean(connectionString),
+    hostname,
+    ssl: resolveDatabaseSsl(nodeEnv) === false ? 'disabled' : 'enabled',
+    nodeEnv,
+  };
+}
+
 export function requireDatabaseUrl() {
   const databaseUrl = resolveDatabaseUrl();
 
