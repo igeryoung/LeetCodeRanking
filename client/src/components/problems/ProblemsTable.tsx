@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,26 +11,89 @@ import { useProblems } from '../../hooks/useProblems';
 import { useStatus } from '../../hooks/useStatus';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTimer } from '../../context/TimerContext';
 import { FilterBar, type Filters } from './FilterBar';
 import { SearchInput } from './SearchInput';
 import { StatusSelector } from './StatusSelector';
+import { TimerDisplay } from './TimerDisplay';
 import { NotesModal } from './NotesModal';
 import { ratingColor, cn } from '../../lib/utils';
 import type { Problem } from '../../types';
 
 const PAGE_SIZES = [15, 25, 50, 100];
+const VIEW_STORAGE_KEY = 'lc-problems-view';
+const DEFAULT_SORTING: SortingState = [{ id: 'rating', desc: true }];
+const DEFAULT_FILTERS: Filters = { problemIndex: [], statusFilter: [] };
+
+interface PersistedProblemView {
+  pageSize?: number;
+  search?: string;
+  sorting?: SortingState;
+  filters?: Filters;
+}
+
+function loadPersistedView(): Required<PersistedProblemView> {
+  try {
+    const raw = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (!raw) {
+      return { pageSize: 15, search: '', sorting: DEFAULT_SORTING, filters: DEFAULT_FILTERS };
+    }
+
+    const parsed = JSON.parse(raw) as PersistedProblemView;
+    const pageSize = PAGE_SIZES.includes(parsed.pageSize ?? 0) ? parsed.pageSize ?? 15 : 15;
+    const sorting = Array.isArray(parsed.sorting) && parsed.sorting.length > 0 ? parsed.sorting : DEFAULT_SORTING;
+    const filters = parsed.filters
+      ? {
+          ratingMin: parsed.filters.ratingMin,
+          ratingMax: parsed.filters.ratingMax,
+          problemIndex: Array.isArray(parsed.filters.problemIndex) ? parsed.filters.problemIndex : [],
+          statusFilter: Array.isArray(parsed.filters.statusFilter) ? parsed.filters.statusFilter : [],
+        }
+      : DEFAULT_FILTERS;
+
+    return {
+      pageSize,
+      search: typeof parsed.search === 'string' ? parsed.search : '',
+      sorting,
+      filters,
+    };
+  } catch {
+    return { pageSize: 15, search: '', sorting: DEFAULT_SORTING, filters: DEFAULT_FILTERS };
+  }
+}
 
 export function ProblemsTable() {
   const { isAuthenticated } = useAuth();
   const { language, t } = useLanguage();
+  const initialView = useRef(loadPersistedView());
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
-  const [search, setSearch] = useState('');
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'rating', desc: true }]);
-  const [filters, setFilters] = useState<Filters>({ problemIndex: [], statusFilter: [] });
+  const [pageSize, setPageSize] = useState(initialView.current.pageSize);
+  const [search, setSearch] = useState(initialView.current.search);
+  const [sorting, setSorting] = useState<SortingState>(initialView.current.sorting);
+  const [filters, setFilters] = useState<Filters>(initialView.current.filters);
   const [notesTarget, setNotesTarget] = useState<Problem | null>(null);
 
   const { statusMap, updateStatus, deleteStatus } = useStatus();
+  const { activeId, reset, seed, start } = useTimer();
+
+  useEffect(() => {
+    const nextView: PersistedProblemView = { pageSize, search, sorting, filters };
+    localStorage.setItem(
+      VIEW_STORAGE_KEY,
+      JSON.stringify(nextView)
+    );
+  }, [pageSize, search, sorting, filters]);
+
+  const seededRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    for (const [idText, status] of Object.entries(statusMap)) {
+      const leetcodeId = Number(idText);
+      if (status.timeSpent > 0 && !seededRef.current.has(leetcodeId)) {
+        seededRef.current.add(leetcodeId);
+        seed(leetcodeId, status.timeSpent);
+      }
+    }
+  }, [statusMap, seed]);
 
   const sortField = sorting[0];
   const query = useMemo(() => ({
@@ -94,6 +157,16 @@ export function ProblemsTable() {
                 href={`https://leetcode.com/problems/${row.original.title_slug}/`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    start(row.original.leetcode_id);
+                  }
+                }}
+                onAuxClick={(event) => {
+                  if (event.button === 1 && isAuthenticated) {
+                    start(row.original.leetcode_id);
+                  }
+                }}
                 className="group flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 <span className="truncate">{title}</span>
@@ -136,8 +209,12 @@ export function ProblemsTable() {
             <div className="flex items-center gap-2">
               <StatusSelector
                 current={s}
-                onSelect={(status, notes) => updateStatus(row.original.leetcode_id, status, notes)}
-                onRemove={() => deleteStatus(row.original.leetcode_id)}
+                leetcodeId={row.original.leetcode_id}
+                onSelect={(status, notes, timeSpent) => updateStatus(row.original.leetcode_id, status, notes, timeSpent)}
+                onRemove={() => {
+                  reset(row.original.leetcode_id);
+                  return deleteStatus(row.original.leetcode_id);
+                }}
               />
               {s && (
                 <button
@@ -157,10 +234,22 @@ export function ProblemsTable() {
           );
         },
       });
+      cols.push({
+        id: 'timer',
+        header: t.table.time,
+        size: 110,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <TimerDisplay
+            leetcodeId={row.original.leetcode_id}
+            isSolved={statusMap[row.original.leetcode_id]?.status === 'solved'}
+          />
+        ),
+      });
     }
 
     return cols;
-  }, [isAuthenticated, statusMap, updateStatus, deleteStatus, language, t]);
+  }, [isAuthenticated, statusMap, updateStatus, deleteStatus, language, t, start, reset]);
 
   const table = useReactTable({
     data: problems,
@@ -261,13 +350,15 @@ export function ProblemsTable() {
             ) : (
               table.getRowModel().rows.map((row) => {
                 const status = statusMap[row.original.leetcode_id]?.status;
+                const isActive = activeId === row.original.leetcode_id;
                 return (
                   <tr
                     key={row.id}
                     className={cn(
                       'border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
                       status === 'solved' && 'bg-green-50/30 dark:bg-green-950/10',
-                      status === 'attempted' && 'bg-amber-50/30 dark:bg-amber-950/10'
+                      status === 'attempted' && 'bg-amber-50/30 dark:bg-amber-950/10',
+                      isActive && 'border-l-2 border-l-blue-500 bg-blue-50/20 dark:bg-blue-950/10'
                     )}
                   >
                     {row.getVisibleCells().map((cell) => (

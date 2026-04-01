@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Check, Minus, Bookmark, X, ChevronDown } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTimer } from '../../context/TimerContext';
 import type { ProblemStatus } from '../../types';
 
 const OPTIONS = [
@@ -12,12 +13,14 @@ const OPTIONS = [
 
 interface Props {
   current?: ProblemStatus;
-  onSelect: (status: string, notes: string) => Promise<void>;
+  leetcodeId: number;
+  onSelect: (status: string, notes: string, timeSpent?: number) => Promise<void>;
   onRemove: () => Promise<void>;
 }
 
-export function StatusSelector({ current, onSelect, onRemove }: Props) {
+export function StatusSelector({ current, leetcodeId, onSelect, onRemove }: Props) {
   const { t } = useLanguage();
+  const timer = useTimer();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +37,16 @@ export function StatusSelector({ current, onSelect, onRemove }: Props) {
     setLoading(true);
     setOpen(false);
     try {
-      await onSelect(value, current?.notes ?? '');
+      let timeSpent: number | undefined;
+
+      if (value === 'solved') {
+        timeSpent = timer.stop(leetcodeId);
+      } else if (value === 'attempted') {
+        timer.pause(leetcodeId);
+        timeSpent = Math.round(timer.getElapsedMs(leetcodeId) / 1000);
+      }
+
+      await onSelect(value, current?.notes ?? '', timeSpent);
     } finally {
       setLoading(false);
     }

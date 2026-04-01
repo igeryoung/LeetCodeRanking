@@ -2,12 +2,13 @@ export type Language = 'en' | 'zh-TW';
 
 export interface Translations {
   nav: { problems: string; dashboard: string; appName: string };
-  table: { rating: string; id: string; problem: string; contest: string; status: string; problems: string; perPage: string; page: string; of: string; noResults: string; unrated: string };
+  table: { rating: string; id: string; problem: string; contest: string; status: string; time: string; problems: string; perPage: string; page: string; of: string; noResults: string; unrated: string };
   filter: { filters: string; rating: string; min: string; max: string; reset: string };
   status: { solved: string; attempted: string; todo: string; remove: string };
   dashboard: { title: string; subtitle: string; solved: string; attempted: string; todo: string; touched: string; ofTotal: (pct: number, total: number) => string; ratingDist: string };
   auth: { login: string; loginWith: (provider: string) => string; logout: string };
   notes: { title: string; save: string; cancel: string; placeholder: string };
+  timer: { start: string; pause: string; resume: string; reset: string; timeSpent: string; totalTime: string };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -23,6 +24,7 @@ export const translations: Record<Language, Translations> = {
       problem: 'Problem',
       contest: 'Contest',
       status: 'Status',
+      time: 'Time',
       problems: 'problems',
       perPage: '/ page',
       page: 'Page',
@@ -64,6 +66,14 @@ export const translations: Record<Language, Translations> = {
       cancel: 'Cancel',
       placeholder: 'Add your notes here...',
     },
+    timer: {
+      start: 'Start timer',
+      pause: 'Pause timer',
+      resume: 'Resume timer',
+      reset: 'Reset timer',
+      timeSpent: 'Time spent',
+      totalTime: 'Total Time',
+    },
   },
   'zh-TW': {
     nav: {
@@ -77,6 +87,7 @@ export const translations: Record<Language, Translations> = {
       problem: '題目',
       contest: '競賽',
       status: '狀態',
+      time: '用時',
       problems: '道題目',
       perPage: '/ 頁',
       page: '第',
@@ -117,6 +128,14 @@ export const translations: Record<Language, Translations> = {
       save: '儲存',
       cancel: '取消',
       placeholder: '在這裡新增你的筆記...',
+    },
+    timer: {
+      start: '開始計時',
+      pause: '暫停計時',
+      resume: '繼續計時',
+      reset: '重置計時',
+      timeSpent: '花費時間',
+      totalTime: '總用時',
     },
   },
 };

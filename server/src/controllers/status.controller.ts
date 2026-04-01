@@ -14,9 +14,15 @@ export async function getStatuses(req: Request, res: Response, next: NextFunctio
 export async function upsertStatus(req: Request, res: Response, next: NextFunction) {
   try {
     const leetcodeId = parseInt(req.params.leetcodeId, 10);
-    const { status, notes = '' } = req.body;
+    const { status, notes = '', timeSpent } = req.body;
 
-    const result = await statusService.upsertStatus((req.user as User).id, leetcodeId, status, notes);
+    const result = await statusService.upsertStatus(
+      (req.user as User).id,
+      leetcodeId,
+      status,
+      notes,
+      typeof timeSpent === 'number' ? timeSpent : undefined
+    );
     res.json(result);
   } catch (err) {
     next(err);
