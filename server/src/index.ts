@@ -2,6 +2,7 @@ import app from './app.js';
 import { env } from './config/env.js';
 import http from 'http';
 import { testDatabaseConnection } from './config/database.js';
+import { runMigrations } from './databaseSetup.js';
 
 process.on('unhandledRejection', (reason) => {
   console.error('[process] unhandledRejection', reason);
@@ -26,6 +27,13 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   console.warn('[process] SIGINT');
 });
+
+console.log('[migrations] running pending migrations...');
+await runMigrations().catch((error) => {
+  console.error('[migrations] failed to run migrations, aborting startup:', error);
+  process.exit(1);
+});
+console.log('[migrations] migrations complete');
 
 const server = app.listen(env.port, () => {
   console.log(`Server running on port ${env.port} (${env.nodeEnv})`);
