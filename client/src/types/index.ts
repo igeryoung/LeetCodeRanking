@@ -31,6 +31,7 @@ export interface PaginatedResult<T> {
 export interface ProblemStatus {
   status: 'solved' | 'attempted' | 'todo';
   notes: string;
+  timeSpent: number;
 }
 
 export interface StatusMap {
@@ -40,4 +41,5 @@ export interface StatusMap {
 export interface Stats {
   summary: Record<string, number>;
   byRating: Array<{ band: string; status: string; count: number }>;
+  totalTimeSpent: number;
 }
